@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Joby Aviation S4 倾转旋翼 eVTOL 全方位系统安全分析 | FVT 2026</title>
+  <meta name="description" content="针对有人驾驶倾转旋翼复合升力 eVTOL Joby S4 开展系统安全工程分析，涵盖 2022 年 NTSB DCA22FA082 原型机事故 CAST 剖析、倾转过渡走廊安全、FHA、STPA、断桨非包容级联 FTA/PRA、SOTIF 与 FAA Stage 5 TIA 安全论据。">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="fv-page" lang="zh-CN">
+  <div class="fv-progress" id="readingProgress" aria-hidden="true"></div>
+
+  <nav class="lab-nav fv-nav" id="caseNav" aria-label="主导航">
+    <div class="lab-nav-inner">
+      <a href="#top" class="lab-nav-brand">
+        <span class="lab-nav-badge">FVT 2026 · JOBY S4</span>
+        <span class="cn">飞行汽车技术基础 · 作业-2 系统安全分析</span>
+        <span class="en">FVT 2026 · Joby S4 System Safety Analysis</span>
+      </a>
+      <button class="lab-nav-toggle" onclick="toggleNav()" aria-label="Toggle Navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="lab-nav-links">
+        <li><a href="#scope"><span class="cn">Powered-Lift</span><span class="en">Scope</span></a></li>
+        <li><a href="#cast"><span class="cn">NTSB CAST</span><span class="en">CAST</span></a></li>
+        <li><a href="#fha"><span class="cn">FHA与走廊</span><span class="en">FHA &amp; Corridor</span></a></li>
+        <li><a href="#stpa"><span class="cn">STPA</span><span class="en">STPA</span></a></li>
+        <li><a href="#fta-fmea"><span class="cn">断桨FTA/PRA</span><span class="en">FTA/PRA</span></a></li>
+        <li><a href="#sotif"><span class="cn">SOTIF/热网安</span><span class="en">SOTIF/Cyber</span></a></li>
+        <li><a href="#gsn"><span class="cn">GSN论据</span><span class="en">GSN Case</span></a></li>
+        <li><a href="#references"><span class="cn">参考文献</span><span class="en">Refs</span></a></li>
+        <li><button type="button" class="nav-action-btn" onclick="window.print()"><span class="cn">打印/PDF</span><span class="en">Print/PDF</span></button></li>
+        <li class="lab-lang-switch"><a href="#" onclick="toggleLang();return false;" id="langBtn">EN</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="top">
+    <header class="fv-article-hero">
+      <div class="container fv-article-hero-grid">
+        <div class="fv-article-hero-copy">
+          <p class="fv-kicker">
+            <span class="cn">飞行汽车技术基础（2026）· 课程作业-2 倾转旋翼构型安全专题</span>
+            <span class="en">Fundamentals of Flying Vehicle Technology (2026) · Assignment 2 Tilt-Rotor Safety Study</span>
+          </p>
+          <h1 class="fv-article-title">
+            <span class="cn">Joby Aviation S4：倾转旋翼复合升力 eVTOL 的过渡态安全与 FAA 适航边界分析</span>
+            <span class="en">Joby Aviation S4: Tilt-Rotor Transition Safety &amp; FAA Powered-Lift Certification Analysis</span>
+          </h1>
+          <p class="fv-deck cn">
+            不同于纯粹依赖旋翼悬停的多旋翼机型，Joby S4 采用“1 名飞行员 + 4 名乘客、6 具可倾转旋翼”的复合升力（Powered-Lift）构型，以 321 km/h 巡航速度与 161 km 航程瞄准商业空中出租车（Air Taxi）市场。然而，高航程与商业载客（10⁻⁹/fh）带来了三类特有的工程安全考题：倾转过渡走廊的气动-作动耦合、桨叶折断后的邻近短舱级联打击风险（2022 年 NTSB DCA22FA082 事故实证），以及高功率密度电池的热安全阻隔。
+          </p>
+          <p class="fv-deck en">
+            Unlike pure multirotors, the piloted 5-seat Joby S4 uses six tilting rotors to achieve 321 km/h cruise and 161 km range as a commercial powered-lift air taxi. Targeting 10⁻⁹/fh commercial safety introduces three signature challenges: hover-to-cruise tilt transition coupling, uncontained rotor-blade cascade impacts (evidenced by NTSB DCA22FA082), and FAA Stage 5 TIA thermal/structural assurance.
+          </p>
+          <div class="fv-byline">
+            <span><span class="cn">分析对象：Joby S4（6 倾转旋翼 · 1 飞 + 4 客）</span><span class="en">Subject: Joby S4 (6 Tilt-Rotors · 5-Seat)</span></span>
+            <span><span class="cn">审定阶段：FAA Stage 5 / TIA 试飞（N547JX）</span><span class="en">Phase: FAA Stage 5 / TIA Conforming (N547JX)</span></span>
+            <span><span class="cn">证据截止：2026-11-23</span><span class="en">Baseline: 2026-11-23</span></span>
+          </div>
+        </div>
+
+        <!-- Custom Vector SVG #0: Tilt-Rotor Safety Envelope -->
+        <figure class="fv-hero-visual">
+          <svg viewBox="0 0 640 420" role="img" aria-label="Joby S4 六倾转旋翼系统安全全景图">
+            <defs>
+              <pattern id="gridJoby" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#223257" stroke-width="0.6"/>
+              </pattern>
+            </defs>
+            <rect width="640" height="420" fill="#121c33"/>
+            <rect width="640" height="420" fill="url(#gridJoby)"/>
+
+            <text x="20" y="26" fill="#9fb8f0" font-family="ui-monospace, monospace" font-size="10.5" font-weight="700">POWERED-LIFT SAFETY ENVELOPE // 6 TILT-ROTORS + WING-BORNE CRUISE</text>
+            <line x1="20" y1="36" x2="620" y2="36" stroke="#2d4270" stroke-width="1"/>
+
+            <!-- Wing & 6 Nacelles Planform -->
+            <g transform="translate(175, 165)">
+              <!-- High Wing -->
+              <path d="M -140,-10 L 140,-10 L 130,16 L -130,16 Z" fill="#233763" stroke="#9fb8f0" stroke-width="1.6"/>
+              <!-- V-tail -->
+              <path d="M -38,64 L 0,48 L 38,64 L 28,74 L 0,60 L -28,74 Z" fill="#233763" stroke="#9fb8f0" stroke-width="1.4"/>
+              <!-- Fuselage -->
+              <ellipse cx="0" cy="18" rx="16" ry="48" fill="#2c457d" stroke="#d5e1fa" stroke-width="1.8"/>
+              <!-- 4 Wing Nacelles + 2 Tail Nacelles -->
+              <g fill="#19294d" stroke="#7ea2f0" stroke-width="1.4">
+                <rect x="-132" y="-24" width="14" height="24"/>
+                <rect x="-72" y="-24" width="14" height="24"/>
+                <rect x="58" y="-24" width="14" height="24"/>
+                <rect x="118" y="-24" width="14" height="24"/>
+                <rect x="-44" y="54" width="12" height="20"/>
+                <rect x="32" y="54" width="12" height="20"/>
+              </g>
+              <!-- Rotor Burst Fan Danger Zone (Station 3 -> 4) -->
+              <path d="M 65,-16 L 135,-42 L 135,10 Z" fill="rgba(224,88,88,0.22)" stroke="#f07575" stroke-width="1.2" stroke-dasharray="3,2"/>
+              <text x="68" y="-32" fill="#f79c8e" font-size="8.5" font-weight="700" font-family="sans-serif">Rotor Burst Fan (St.3→4)</text>
+              <text x="0" y="96" fill="#d5e1fa" font-size="9.5" text-anchor="middle" font-family="sans-serif">4 翼上倾转短舱 + 2 V尾倾转短舱</text>
+            </g>
+
+            <!-- Right Safety Panels -->
+            <g font-family="sans-serif">
+              <rect x="355" y="54" width="265" height="68" fill="#1a294a" stroke="#5372b8"/>
+              <text x="368" y="75" fill="#9fb8f0" font-size="11" font-weight="700">1. 倾转过渡模态与作动保护</text>
+              <text x="368" y="93" fill="#e1e8f7" font-size="9.5">• 90° 悬停 ↔ 0° 翼载巡航连续走廊</text>
+              <text x="368" y="109" fill="#e1e8f7" font-size="9.5">• 作动器卡阻不对称偏转与失速边界防护</text>
+
+              <rect x="355" y="136" width="265" height="68" fill="#2c1922" stroke="#d96a6a"/>
+              <text x="368" y="157" fill="#f79c8e" font-size="11" font-weight="700">2. NTSB DCA22FA082 级联教训</text>
+              <text x="368" y="175" fill="#fae1e1" font-size="9.5">• 2022-02 N542AJ 181 KIAS 超限试飞</text>
+              <text x="368" y="191" fill="#fae1e1" font-size="9.5">• 3号桨断裂击中4号桨 → 防非包容级联</text>
+
+              <rect x="355" y="218" width="265" height="68" fill="#1a294a" stroke="#5372b8"/>
+              <text x="368" y="239" fill="#9fb8f0" font-size="11" font-weight="700">3. 10⁻⁹/fh 商业载客与 FAA TIA</text>
+              <text x="368" y="257" fill="#e1e8f7" font-size="9.5">• 4 组独立电池热隔离 + 统一矢量操纵杆</text>
+              <text x="368" y="273" fill="#e1e8f7" font-size="9.5">• Stage 5 符合性原型机 N547JX 局方试飞</text>
+            </g>
+
+            <!-- Bottom Strip -->
+            <rect x="20" y="306" width="600" height="94" fill="#16223d" stroke="#364f85"/>
+            <text x="34" y="328" fill="#9fb8f0" font-size="10.5" font-weight="700" font-family="ui-monospace, monospace">FAA PART 21.17(b) POWERED-LIFT &amp; EASA SC-VTOL ENHANCED BENCHMARK</text>
+            <text x="34" y="349" fill="#e1e8f7" font-size="10" font-family="sans-serif">• 1 驾驶员 + 4 乘客 · 最高速度 321 km/h (200 mph) · 设计航程 161 km (100 mi)</text>
+            <text x="34" y="369" fill="#e1e8f7" font-size="10" font-family="sans-serif">• 核心难点：高速下倾转短舱气弹稳定性、断桨碎片隔离、以及高密度商业运营持续适航</text>
+            <text x="34" y="388" fill="#80e0a7" font-size="9.5" font-family="ui-monospace, monospace">TARGET: Catastrophic Failure ≤ 10⁻⁹ / fh · No Single Failure Catastrophic</text>
+          </svg>
+          <figcaption>
+            <span class="cn">图 0：Joby S4 倾转旋翼复合升力（Powered-Lift）系统安全全景。倾转过渡模态与邻近短舱断桨打击扇面（Station 3 → 4）是区别于纯多旋翼的核心安全研究对象。</span>
+            <span class="en">Figure 0: Joby S4 powered-lift safety panorama highlighting tilt transition corridors, adjacent nacelle rotor-burst fans (Station 3 → 4), and 10⁻⁹/fh commercial targets.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </header>
+
+    <div class="container fv-article-shell">
+      <nav class="fv-toc" aria-label="文章目录">
+        <p class="fv-toc-title"><span class="cn">安全分析目录</span><span class="en">Safety Contents</span></p>
+        <ol>
+          <li><a href="#summary"><span class="cn">执行摘要</span><span class="en">Executive Summary</span></a></li>
+          <li><a href="#scope">01 <span class="cn">Powered-Lift 审定边界</span><span class="en">Scope &amp; Part 21.17(b)</span></a></li>
+          <li><a href="#cast">02 <span class="cn">NTSB N542AJ CAST 剖析</span><span class="en">NTSB CAST Analysis</span></a></li>
+          <li><a href="#fha">03 <span class="cn">FHA 与倾转过渡走廊</span><span class="en">FHA &amp; Tilt Corridor</span></a></li>
+          <li><a href="#stpa">04 <span class="cn">STPA 控制结构与 UCA</span><span class="en">STPA &amp; UCAs</span></a></li>
+          <li><a href="#fta-fmea">05 <span class="cn">断桨级联 FTA 与 PRA</span><span class="en">Burst FTA &amp; PRA</span></a></li>
+          <li><a href="#sotif">06 <span class="cn">SOTIF、热安全与网安</span><span class="en">SOTIF, Thermal &amp; Cyber</span></a></li>
+          <li><a href="#gsn">07 <span class="cn">GSN 安全论据与 TIA 门控</span><span class="en">GSN Case &amp; TIA Gates</span></a></li>
+          <li><a href="#recommendations">08 <span class="cn">分级安全改进建议</span><span class="en">Recommendations</span></a></li>
+          <li><a href="#references"><span class="cn">参考文献</span><span class="en">References</span></a></li>
+        </ol>
+      </nav>
+
+      <article class="fv-article">
+        <section class="fv-executive" id="summary">
+          <h2><span class="cn">安全分析执行摘要</span><span class="en">Safety Executive Summary</span></h2>
+          <ol>
+            <li>
+              <span class="cn"><strong>商业载客的 10⁻⁹/fh 门槛壁垒：</strong>Joby S4 目标直接切入高密度城市/城际空中出租车运营（Part 135），按 FAA <code>Part 21.17(b)</code> 与 EASA <code>SC-VTOL Enhanced</code> 对标，其灾难性失效概率必须满足 ≤ 10⁻⁹/fh 且“任何单一失效不得导致灾难性后果”，安全严格度高出轻型娱乐飞机（LSA）两个数量级。</span>
+              <span class="en"><strong>10⁻⁹/fh Commercial Bar:</strong> Targeting Part 135 commercial air-taxi service, Joby S4 faces 10⁻⁹/fh catastrophic failure limits and strict single-failure tolerance under FAA <code>Part 21.17(b)</code> and EASA <code>SC-VTOL Enhanced</code>—two orders stricter than recreational LSA.</span>
+            </li>
+            <li>
+              <span class="cn"><strong>NTSB DCA22FA082 事故（2022-02-16）的实证警示：</strong>前期原型机 JAS4-2（N542AJ）在 181 KIAS 高速包线扩展俯冲中，因 3 号倾转站作动连杆允许桨叶处于过大桨距角导致桨叶折断，并<strong>击中相邻 4 号旋翼引发级联解体</strong>。该事故迫使后续量产构型（含 TIA 原型机 N547JX）全面重估倾转机构极限锁止与非包容性断桨打击扇面隔离。</span>
+              <span class="en"><strong>Empirical Warning from NTSB DCA22FA082 (2022):</strong> During an uncrewed 181 KIAS dive test, a blade separation at Station 3 (linked to tilt actuator linkage pitch excursion) struck adjacent Station 4, triggering cascading breakup—driving strict blade-retention and rotor-burst fan protections in conforming N547JX.</span>
+            </li>
+            <li>
+              <span class="cn"><strong>倾转过渡走廊与统一操纵律（Unified Control）：</strong>Joby S4 使用单一矢量操纵杆整合悬停至巡航模态转换。STPA 与走廊计算表明，0°–90° 过渡区间内作动器不对称卡阻（&gt;4–8°）叠加低空湍流极易诱发滚转/偏航配平饱和，必须通过多余度倾转传感器表决与差动推力/气动舵面实时分配加以兜底。</span>
+              <span class="en"><strong>Tilt Transition &amp; Unified Control:</strong> Across 0°–90° nacelle tilt, asymmetric actuator jams (&gt;4–8°) or stall-corridor excursions demand triple-redundant position sensing and coupled differential thrust/aileron trim allocation.</span>
+            </li>
+          </ol>
+        </section>
+
+        <div class="fv-stat-band" aria-label="Joby S4 核心安全指标">
+          <div>
+            <strong>Stage 5 TIA</strong>
+            <span class="cn">FAA 型号审定最后阶段（N547JX 符合性原型机试飞验证中）</span>
+            <span class="en">FAA Stage 5 Show &amp; Verify (conforming N547JX in flight testing)</span>
+          </div>
+          <div>
+            <strong>10⁻⁹ / fh</strong>
+            <span class="cn">商业载客灾难性失效概率目标及单点失效禁止准则</span>
+            <span class="en">Commercial catastrophic failure objective &amp; no-single-failure rule</span>
+          </div>
+          <div>
+            <strong>DCA22FA082</strong>
+            <span class="cn">2022-02-16 NTSB 事故报告：181 KIAS 试飞断桨级联（零伤亡）</span>
+            <span class="en">NTSB Feb 2022 report: 181 KIAS blade-burst cascade (zero injuries)</span>
+          </div>
+          <div>
+            <strong>6 倾转 / 4 电池</strong>
+            <span class="cn">6 具分布式倾转旋翼 + 4 组独立热隔离高能量电池包</span>
+            <span class="en">6 distributed tilt-rotors + 4 thermally isolated battery packs</span>
+          </div>
+        </div>
+
+        <!-- Section 01 -->
+        <h2 id="scope"><span class="cn">01 系统定义与 FAA Powered-Lift 适航边界</span><span class="en">01 Item Definition &amp; FAA Part 21.17(b) Powered-Lift Scope</span></h2>
+        <p class="cn">
+          Joby S4 被 FAA 归类为特殊类别航空器——<strong>Powered-Lift（动力升力航空器）</strong>，依据 <code>14 CFR § 21.17(b)</code> 制定专属审定基础（G-1 Issue Paper），综合借鉴 Part 23 正常类飞机与 Part 27 正常类旋翼机条款<sup><a class="fv-citation" href="#ref1">[1]</a></sup><sup><a class="fv-citation" href="#ref2">[2]</a></sup>。与仅依赖多旋翼的构型相比，S4 在高速平飞段依靠机翼产生主要升力（气动效率大幅提升，航程达 161 km），但同时引入了<strong>可动倾转短舱结构、高速螺旋桨气弹颤振、以及直升机与固定翼之间的模态切换安全问题</strong>。
+        </p>
+        <p class="en">
+          Certified by the FAA as a special-class <strong>Powered-Lift</strong> aircraft under <code>14 CFR § 21.17(b)</code><sup><a class="fv-citation" href="#ref1">[1]</a></sup><sup><a class="fv-citation" href="#ref2">[2]</a></sup>, the Joby S4 blends Part 23 airplane and Part 27 rotorcraft rules. Wing-borne cruise enables 161 km range, but adds movable nacelle joints, high-speed aeroelastic flutter margins, and transition-corridor flight control hazards.
+        </p>
+
+        <!-- Section 02 -->
+        <h2 id="cast"><span class="cn">02 实证事故逆向剖析（CAST）：2022 年 Joby N542AJ 遥控试飞坠毁事件</span><span class="en">02 Empirical CAST Analysis: 2022 Joby N542AJ Crash (NTSB DCA22FA082)</span></h2>
+        <p class="cn">
+          2022 年 2 月 16 日，Joby 预生产原型机（Model JAS4-2，注册号 <code>N542AJ</code>）在加州 Jolon 无人区执行计划内的空速-高度包线扩展遥控试飞<sup><a class="fv-citation" href="#ref3">[3]</a></sup>。飞机俯冲加速至 <strong>181 KIAS</strong>（约 8,900 ft 高度，超出预期正常运行包线）时，右翼内侧 3 号推进站螺旋桨叶片在根部发生弯曲断裂飞脱，并击中相邻外侧 4 号推进站螺旋桨，引发多具电机/桨叶级联脱离、飞机空中解体坠毁<sup><a class="fv-citation" href="#ref3">[3]</a></sup><sup><a class="fv-citation" href="#ref4">[4]</a></sup>。由于采取了无人遥控试飞与无人区隔离，事故实现<strong>零人员伤亡</strong>。
+        </p>
+        <p class="en">
+          On 16 February 2022, Joby's pre-production JAS4-2 prototype (<code>N542AJ</code>) crashed near Jolon, California during an uncrewed envelope-expansion dive reaching <strong>181 KIAS</strong> at ~8,900 ft<sup><a class="fv-citation" href="#ref3">[3]</a></sup>. Per NTSB final report <code>DCA22FA082</code>, a propeller blade fractured near its root at propulsion station 3 and struck adjacent station 4, causing cascading propulsion breakup and loss of control with <strong>zero injuries</strong><sup><a class="fv-citation" href="#ref3">[3]</a></sup><sup><a class="fv-citation" href="#ref4">[4]</a></sup>.
+        </p>
+
+        <div class="fv-table-wrap">
+          <table class="fv-table">
+            <thead>
+              <tr>
+                <th><span class="cn">CAST 分析层级</span><span class="en">CAST Tier</span></th>
+                <th><span class="cn">NTSB 调查事实与控制缺陷</span><span class="en">Observed Facts &amp; Control Flaw</span></th>
+                <th><span class="cn">系统工程根因</span><span class="en">Systemic Root Cause</span></th>
+                <th><span class="cn">面向 N547JX 量产机的整改约束</span><span class="en">Design Mitigation for N547JX</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>L1 · 物理与气动载荷</strong></td>
+                <td><span class="cn">3 号桨叶根部弯曲折断 → 碎片击打邻近 4 号桨导致级联失效</span><span class="en">Station 3 blade root bending fracture → strikes Station 4</span></td>
+                <td><span class="cn">高速俯冲叠加过大桨距角产生超设计离心与气动弯矩载荷</span><span class="en">High-speed dive + excessive pitch angle exceeded root bending limit</span></td>
+                <td><span class="cn">提高桨毂/叶根结构安全系数 + 限制高空高速极限俯冲 V<sub>D</sub></span><span class="en">Strengthen blade root + enforce structural dive speed margin V<sub>D</sub></span></td>
+              </tr>
+              <tr>
+                <td><strong>L2 · 作动连杆机械控制</strong></td>
+                <td><span class="cn">3 号站倾转/变距作动连杆允许桨叶进入比指令更陡的桨距角<sup><a class="fv-citation" href="#ref4">[4]</a></sup></span><span class="en">Actuator linkage allowed steeper blade pitch than commanded<sup><a class="fv-citation" href="#ref4">[4]</a></sup></span></td>
+                <td><span class="cn">作动连杆几何约束与飞控软件限幅未能在超包线区锁死机械极限</span><span class="en">Linkage kinematics lacked physical hard-stop against over-pitch</span></td>
+                <td><span class="cn">重设计作动连杆防超程硬限位 + 飞控高速包线自动抬头保护</span><span class="en">Redesign linkage mechanical hard-stop + automatic overspeed pull-up</span></td>
+              </tr>
+              <tr>
+                <td><strong>L3 · 试飞隔离与数据闭环</strong></td>
+                <td><span class="cn">遥控无人试飞 + 360° 机载相机与黑匣子完整留存证据</span><span class="en">Uncrewed remote flight test + 360° camera preserved evidence</span></td>
+                <td><span class="cn">高风险边界试飞策略成功兜底了生命安全，验证了风险分级试飞价值</span><span class="en">Remote envelope-expansion protocol successfully prevented casualties</span></td>
+                <td><span class="cn">所有新构型极限边界扩展均强制采用无人遥控 + 无人区隔离</span><span class="en">Mandate uncrewed flight for all high-risk boundary expansions</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 03 -->
+        <h2 id="fha"><span class="cn">03 航空 FHA 与倾转过渡走廊安全包线计算</span><span class="en">03 Aviation FHA &amp; Tilt-Transition Corridor Simulator</span></h2>
+        <p class="cn">
+          针对商业载客定位，Joby S4 的 FHA 必须覆盖悬停、倾转加速（90° → 0°）、翼载高速巡航、倾转减速进近（0° → 90°）四大阶段。其中<strong>倾转过渡阶段</strong>既缺乏纯巡航下的机翼高升阻比裕度，又处于旋翼倾角变化导致的推力矢量剧烈重构期，是系统安全包线最窄的窗口。
+        </p>
+        <p class="en">
+          For commercial Part 135 carriage, FHA spans hover, forward tilt transition (90° → 0°), wing-borne cruise, and approach tilt (0° → 90°). The transition corridor is the narrowest safety window, blending partial wing lift with rapidly rotating thrust vectors.
+        </p>
+
+        <!-- Interactive Widget #1: Tilt Transition Corridor -->
+        <section class="sim-card" id="tilt-corridor-calc" aria-label="Powered-Lift 倾转过渡安全走廊评估器">
+          <div class="sim-header">
+            <h4>
+              <span class="cn">交互式 Powered-Lift 倾转过渡安全走廊评估器</span>
+              <span class="en">Interactive Powered-Lift Tilt-Transition Corridor Evaluator</span>
+            </h4>
+          </div>
+          <div class="sim-grid">
+            <div class="sim-controls">
+              <div class="sim-control">
+                <label><span><span class="cn">短舱倾转角（90°=纯悬停，0°=水平巡航）</span><span class="en">Nacelle Tilt Angle (90°=Hover, 0°=Cruise)</span></span><span class="val" id="valTiltAngle">45°</span></label>
+                <input type="range" id="tiltAngle" min="0" max="90" step="5" value="45">
+              </div>
+              <div class="sim-control">
+                <label><span><span class="cn">指示空速 (KIAS)</span><span class="en">Indicated Airspeed (KIAS)</span></span><span class="val" id="valTiltIas">85 KIAS</span></label>
+                <input type="range" id="tiltIas" min="0" max="190" step="5" value="85">
+              </div>
+              <div class="sim-control">
+                <label><span><span class="cn">左右短舱倾转不对称偏差角</span><span class="en">Left-Right Tilt Asymmetry</span></span><span class="val" id="valTiltAsym">2°</span></label>
+                <input type="range" id="tiltAsym" min="0" max="15" step="1" value="2">
+              </div>
+              <div class="sim-control">
+                <label><span><span class="cn">运行密度高度 (ft)</span><span class="en">Density Altitude (ft)</span></span><span class="val" id="valTiltAlt">2000 ft</span></label>
+                <input type="range" id="tiltAlt" min="0" max="8000" step="500" value="2000">
+              </div>
+            </div>
+            <div class="sim-results">
+              <div class="sim-metric">
+                <span class="lbl"><span class="cn">当前倾角许可安全空速走廊</span><span class="en">Safe Airspeed Corridor</span></span>
+                <strong class="num" id="outTiltCorridor">—</strong>
+              </div>
+              <div class="sim-metric">
+                <span class="lbl"><span class="cn">单发失效 (OEI) 推力控制裕度</span><span class="en">OEI Thrust &amp; Trim Margin</span></span>
+                <strong class="num" id="outTiltOei">—</strong>
+              </div>
+              <div class="sim-metric wide" id="outTiltBox">
+                <span class="lbl"><span class="cn">倾转过渡包线安全状态</span><span class="en">Transition Envelope Safety Status</span></span>
+                <strong class="num" style="font-size:13.5px;" id="outTiltVerdict">—</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 04 -->
+        <h2 id="stpa"><span class="cn">04 STPA 分层控制结构与倾转模态 UCA 分析</span><span class="en">04 STPA Control Structure &amp; Tilt-Mode UCAs</span></h2>
+
+        <!-- Custom Vector SVG #1: Joby STPA Control Structure -->
+        <figure class="fv-figure">
+          <svg viewBox="0 0 760 320" role="img" aria-label="Joby S4 STPA 分层控制结构图">
+            <defs>
+              <marker id="arrJoby" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#283e6e"/>
+              </marker>
+              <marker id="arrJobyM" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#6b7280"/>
+              </marker>
+            </defs>
+            <rect width="760" height="320" fill="#fbfcfd"/>
+            <text x="18" y="22" fill="#182542" font-size="11.5" font-weight="700" font-family="sans-serif">Joby S4 STPA 控制结构：统一操纵杆 ↔ 多余度 FCC ↔ 倾转作动器 / 6×EPU</text>
+            <line x1="18" y1="30" x2="742" y2="30" stroke="#d6dae3"/>
+
+            <rect x="190" y="42" width="380" height="48" fill="#eaedf5" stroke="#283e6e" stroke-width="1.5"/>
+            <text x="380" y="62" fill="#182542" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">在机飞行员（Unified Inceptor 统一矢量操纵杆 + 倾转开关）</text>
+            <text x="380" y="78" fill="#465880" font-size="9.5" text-anchor="middle" font-family="sans-serif">悬停/巡航由统一飞行律解耦，飞行员仅下达期望航迹与速度指令</text>
+
+            <line x1="320" y1="90" x2="320" y2="132" stroke="#283e6e" stroke-width="1.5" marker-end="url(#arrJoby)"/>
+            <text x="312" y="114" fill="#283e6e" font-size="9" text-anchor="end" font-family="sans-serif">期望速度/爬升/倾转命令</text>
+            <line x1="440" y1="132" x2="440" y2="90" stroke="#6b7280" stroke-width="1.3" stroke-dasharray="3,2" marker-end="url(#arrJobyM)"/>
+            <text x="448" y="114" fill="#5c6270" font-size="9" text-anchor="start" font-family="sans-serif">走廊包线/作动同步告警</text>
+
+            <rect x="45" y="134" width="310" height="54" fill="#ffffff" stroke="#283e6e" stroke-width="1.4"/>
+            <text x="200" y="156" fill="#182542" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">三重余度飞控计算机 (Triplex FCC)</text>
+            <text x="200" y="173" fill="#5c6270" font-size="9.5" text-anchor="middle" font-family="sans-serif">走廊限幅保护 · OEI 差动配平 · 左右倾转同步律</text>
+
+            <rect x="405" y="134" width="310" height="54" fill="#eaf5ef" stroke="#165b3d" stroke-width="1.4"/>
+            <text x="560" y="156" fill="#165b3d" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">4 组独立电池 BMS + 高压配电矩阵</text>
+            <text x="560" y="173" fill="#2d5b44" font-size="9.5" text-anchor="middle" font-family="sans-serif">交叉母线重构 · 断包不断机 · 热蔓延隔离</text>
+
+            <line x1="355" y1="161" x2="405" y2="161" stroke="#283e6e" stroke-width="1.3"/>
+
+            <line x1="200" y1="188" x2="200" y2="232" stroke="#283e6e" stroke-width="1.4" marker-end="url(#arrJoby)"/>
+            <text x="192" y="214" fill="#283e6e" font-size="9" text-anchor="end" font-family="sans-serif">倾转角/变距/副翼指令</text>
+            <line x1="560" y1="188" x2="560" y2="232" stroke="#283e6e" stroke-width="1.4" marker-end="url(#arrJoby)"/>
+            <text x="568" y="214" fill="#283e6e" font-size="9" text-anchor="start" font-family="sans-serif">6路直流高压供电与保护</text>
+
+            <rect x="45" y="234" width="670" height="62" fill="#182542"/>
+            <text x="380" y="258" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">被控物理过程：6 倾转短舱 + 变距桨毂 + 常规气动舵面（副翼/V尾）</text>
+            <text x="380" y="278" fill="#a8bef0" font-size="9.5" text-anchor="middle" font-family="sans-serif">关键约束：倾转角与空速强耦合，高速严禁突发大幅前倾或越界俯冲</text>
+          </svg>
+          <figcaption>
+            <span class="cn">图 1：Joby S4 STPA 分层安全控制结构。统一矢量操纵律降低了飞行员转换模态负荷，但把全部耦合控制逻辑集中于 Triplex FCC 与作动同步回路。</span>
+            <span class="en">Figure 1: Joby S4 STPA control structure illustrating unified pilot inceptor commands through Triplex FCCs to tilt actuators, variable-pitch hubs, and aerodynamic surfaces.</span>
+          </figcaption>
+        </figure>
+
+        <div class="fv-filter-bar" id="stpaFilterBar">
+          <button type="button" class="fv-filter-btn active" onclick="filterStpa('all', this)"><span class="cn">全部 UCA (6)</span><span class="en">All UCAs (6)</span></button>
+          <button type="button" class="fv-filter-btn" onclick="filterStpa('tilt', this)"><span class="cn">倾转与变距 (3)</span><span class="en">Tilt &amp; Pitch (3)</span></button>
+          <button type="button" class="fv-filter-btn" onclick="filterStpa('oei', this)"><span class="cn">OEI 与能源 (3)</span><span class="en">OEI &amp; Power (3)</span></button>
+        </div>
+
+        <div class="fv-table-wrap">
+          <table class="fv-table" id="stpaMatrixTable">
+            <thead>
+              <tr>
+                <th>UCA ID</th>
+                <th><span class="cn">控制动作与类型</span><span class="en">Control Action &amp; Type</span></th>
+                <th><span class="cn">致因场景</span><span class="en">Loss Scenario</span></th>
+                <th><span class="cn">派生安全约束</span><span class="en">Safety Constraint</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-domain="tilt">
+                <td><code>UCA-01</code></td>
+                <td><span class="cn"><strong>短舱向前倾转指令</strong><br><span class="fv-badge fv-badge-critical">过早/低空速提供</span></span><span class="en"><strong>Forward Nacelle Tilt</strong><br><span class="fv-badge fv-badge-critical">Provided Too Early</span></span></td>
+                <td><span class="cn">未达机翼最小失速保护速度即令短舱趋近 0°，导致机翼失速下坠。</span><span class="en">Tilting toward 0° below wing stall speed causes sudden lift loss.</span></td>
+                <td><span class="cn">空速双余度互锁：仅当 IAS ≥ 最低走廊速度时允许继续前倾</span><span class="en">Dual IAS interlock prevents forward tilt below corridor floor</span></td>
+              </tr>
+              <tr data-domain="tilt">
+                <td><code>UCA-02</code></td>
+                <td><span class="cn"><strong>单侧短舱倾转同步停止</strong><br><span class="fv-badge fv-badge-critical">不对称滞后</span></span><span class="en"><strong>Tilt Sync Halt</strong><br><span class="fv-badge fv-badge-critical">Asymmetric Lag</span></span></td>
+                <td><span class="cn">右翼外侧短舱作动卡阻而左翼继续倾转，产生巨额不对称滚转/偏航力矩。</span><span class="en">One wing nacelle jams while opposite continues, creating severe roll torque.</span></td>
+                <td><span class="cn">左右偏差 &gt;2° 即毫秒级冻结对称侧作动器，并启用副翼/差动配平</span><span class="en">Freeze symmetric nacelle at &gt;2° delta + trim via ailerons/thrust</span></td>
+              </tr>
+              <tr data-domain="tilt">
+                <td><code>UCA-03</code></td>
+                <td><span class="cn"><strong>高速俯冲变距限制指令</strong><br><span class="fv-badge fv-badge-critical">未提供（N542AJ 教训）</span></span><span class="en"><strong>Pitch-Excursion Limit</strong><br><span class="fv-badge fv-badge-critical">Not Provided</span></span></td>
+                <td><span class="cn">高速俯冲接近结构极限速度 V<sub>D</sub> 时作动连杆未提供有效防过桨距角物理/软件限幅。</span><span class="en">Linkage &amp; FCC fail to clamp excessive pitch during high-speed dive.</span></td>
+                <td><span class="cn">机械连杆硬限位 + 超速自动抬头保护律不可被普通模式解除</span><span class="en">Mechanical hard-stop + automatic overspeed pitch-up protection</span></td>
+              </tr>
+              <tr data-domain="oei">
+                <td><code>UCA-04</code></td>
+                <td><span class="cn"><strong>对称推力降额配平（断桨后）</strong><br><span class="fv-badge fv-badge-high">过晚提供</span></span><span class="en"><strong>Symmetric Thrust Trim</strong><br><span class="fv-badge fv-badge-high">Too Late</span></span></td>
+                <td><span class="cn">某具电机停转后对称侧仍保持高推力达 &gt;100 ms，加剧大侧滑偏航角。</span><span class="en">Opposite motor stays at high thrust &gt;100 ms post-OEI, amplifying yaw.</span></td>
+                <td><span class="cn">≤20 ms 内对称配平 + 其余 4–5 具旋翼接管垂直/水平矢量</span><span class="en">Trim opposite side ≤20 ms; redistribute across remaining rotors</span></td>
+              </tr>
+              <tr data-domain="oei">
+                <td><code>UCA-05</code></td>
+                <td><span class="cn"><strong>4 组电池交叉母线隔离</strong><br><span class="fv-badge fv-badge-critical">未提供隔离</span></span><span class="en"><strong>4-Pack Cross-Bus Isolate</strong><br><span class="fv-badge fv-badge-critical">Not Provided</span></span></td>
+                <td><span class="cn">单一电池包内部短路拉低整个高压供电，波及正常推进通道。</span><span class="en">Single pack short drags down cross-tied HV bus to healthy motors.</span></td>
+                <td><span class="cn">4 组独立通道平时解耦或配固态高速限流断路器</span><span class="en">Keep 4 packs electrically decoupled via solid-state breakers</span></td>
+              </tr>
+              <tr data-domain="oei">
+                <td><code>UCA-06</code></td>
+                <td><span class="cn"><strong>低空进近自动返航/复飞指令</strong><br><span class="fv-badge fv-badge-med">模式混淆</span></span><span class="en"><strong>Go-Around Mode Switch</strong><br><span class="fv-badge fv-badge-med">Mode Confusion</span></span></td>
+                <td><span class="cn">飞行员在着陆坪拉平阶段误操作复飞逻辑，引发短舱意外回倾。</span><span class="en">Inadvertent go-around input tilts nacelles prematurely during flare.</span></td>
+                <td><span class="cn">清晰触觉卡位区 + HUD 倾转矢量预测线强视觉提示</span><span class="en">Tactile throttle detent + HUD thrust-vector predictor cue</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 05 -->
+        <h2 id="fta-fmea"><span class="cn">05 断桨级联 FTA、非包容碎片 PRA 与概率仿真</span><span class="en">05 Blade-Burst FTA, Uncontained Rotor PRA &amp; Simulator</span></h2>
+        <p class="cn">
+          对标 <code>FAA AC 23.1309-1E</code> 与 <code>EASA SC-VTOL Enhanced</code> 的 <strong>10⁻⁹/fh</strong> 商业载客门槛，Joby S4 最受审定机构关注的两项特定风险（PRA）是：① <strong>桨叶或转子飞脱（Rotor Burst）击中相邻短舱或主翼梁</strong>；② <strong>单侧倾转作动器机械卡阻</strong>。
+        </p>
+        <p class="en">
+          Meeting the <strong>10⁻⁹/fh</strong> commercial target puts two Particular Risks under intense FAA/EASA scrutiny: 1) uncontained rotor-blade burst striking adjacent nacelles or wing spars, and 2) asymmetric tilt-actuator mechanical jam.
+        </p>
+
+        <!-- Custom Vector SVG #2: Joby FTA -->
+        <figure class="fv-figure">
+          <svg viewBox="0 0 760 280" role="img" aria-label="Joby S4 倾转旋翼灾难性失效故障树 (FTA)">
+            <rect width="760" height="280" fill="#fbfcfd"/>
+            <text x="18" y="22" fill="#182542" font-size="11.5" font-weight="700" font-family="sans-serif">Joby S4 故障树 (FTA) — 商业载客顶事件 T1 (目标 ≤ 10⁻⁹ / fh)</text>
+            <line x1="18" y1="30" x2="742" y2="30" stroke="#d6dae3"/>
+
+            <rect x="210" y="40" width="340" height="36" fill="#8e2424"/>
+            <text x="380" y="62" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">T1: 倾转失稳坠毁 / 不可控断桨解体 (目标 ≤10⁻⁹/fh)</text>
+
+            <line x1="380" y1="76" x2="380" y2="92" stroke="#283e6e" stroke-width="1.5"/>
+            <rect x="356" y="92" width="48" height="20" rx="10" fill="#ffffff" stroke="#283e6e" stroke-width="1.5"/>
+            <text x="380" y="106" fill="#283e6e" font-size="10" font-weight="700" text-anchor="middle" font-family="ui-monospace, monospace">OR</text>
+            <line x1="95" y1="122" x2="665" y2="122" stroke="#283e6e" stroke-width="1.5"/>
+            <line x1="380" y1="112" x2="380" y2="122" stroke="#283e6e" stroke-width="1.5"/>
+
+            <line x1="95" y1="122" x2="95" y2="140" stroke="#283e6e" stroke-width="1.4"/>
+            <line x1="285" y1="122" x2="285" y2="140" stroke="#283e6e" stroke-width="1.4"/>
+            <line x1="475" y1="122" x2="475" y2="140" stroke="#283e6e" stroke-width="1.4"/>
+            <line x1="665" y1="122" x2="665" y2="140" stroke="#283e6e" stroke-width="1.4"/>
+
+            <rect x="16" y="140" width="158" height="114" fill="#fbeeee" stroke="#c36b6b" stroke-width="1.3"/>
+            <text x="95" y="162" fill="#8e2424" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">B1: 非包容断桨级联</text>
+            <text x="95" y="182" fill="#5e2a2a" font-size="8.6" text-anchor="middle" font-family="sans-serif">单桨断裂 ∧ 击中邻近</text>
+            <text x="95" y="198" fill="#5e2a2a" font-size="8.6" text-anchor="middle" font-family="sans-serif">短舱/主翼梁 (N542AJ)</text>
+            <text x="95" y="232" fill="#8e2424" font-size="8.5" font-weight="700" text-anchor="middle" font-family="ui-monospace, monospace">CS2: 6·λ_burst·(1-Shield)</text>
+
+            <rect x="206" y="140" width="158" height="114" fill="#fdf5e7" stroke="#c69148" stroke-width="1.3"/>
+            <text x="285" y="162" fill="#9a5b13" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">B2: 倾转作动器卡阻失配</text>
+            <text x="285" y="182" fill="#5e4b2b" font-size="8.6" text-anchor="middle" font-family="sans-serif">单短舱偏转卡死 ∧</text>
+            <text x="285" y="198" fill="#5e4b2b" font-size="8.6" text-anchor="middle" font-family="sans-serif">差动/副翼无法配平</text>
+            <text x="285" y="232" fill="#9a5b13" font-size="8.5" font-weight="700" text-anchor="middle" font-family="ui-monospace, monospace">CS3: 6·λ_act·P_untrim</text>
+
+            <rect x="396" y="140" width="158" height="114" fill="#eaedf5" stroke="#283e6e" stroke-width="1.3"/>
+            <text x="475" y="162" fill="#182542" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">B3: 独立双发随机失效</text>
+            <text x="475" y="182" fill="#3a4766" font-size="8.6" text-anchor="middle" font-family="sans-serif">15 组双机组合同时失效</text>
+            <text x="475" y="198" fill="#3a4766" font-size="8.6" text-anchor="middle" font-family="sans-serif">或飞控/电池共因失能</text>
+            <text x="475" y="232" fill="#283e6e" font-size="8.5" font-weight="700" text-anchor="middle" font-family="ui-monospace, monospace">CS1 &amp; CS4 (β·λ)</text>
+
+            <rect x="586" y="140" width="158" height="114" fill="#eaedf5" stroke="#283e6e" stroke-width="1.3"/>
+            <text x="665" y="162" fill="#182542" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">B4: 4 电池热蔓延失控</text>
+            <text x="665" y="182" fill="#3a4766" font-size="8.6" text-anchor="middle" font-family="sans-serif">机翼/机身舱内热失控</text>
+            <text x="665" y="198" fill="#3a4766" font-size="8.6" text-anchor="middle" font-family="sans-serif">穿透防火墙波及相邻包</text>
+            <text x="665" y="232" fill="#283e6e" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">（DAL A 防火隔断）</text>
+          </svg>
+          <figcaption>
+            <span class="cn">图 2：Joby S4 顶事件 FTA。将 2022 年 N542AJ 事故教训显式建模为 CS2（断桨非包容性级联打击）与 CS3（倾转作动器卡阻）。</span>
+            <span class="en">Figure 2: Joby S4 Fault Tree explicitly capturing CS2 (uncontained blade-strike cascade) and CS3 (asymmetric tilt-actuator jam).</span>
+          </figcaption>
+        </figure>
+
+        <!-- Interactive Widget #2: Tilt-Rotor FTA Simulator -->
+        <section class="sim-card" id="fta-reliability-sim" aria-label="Joby S4 倾转级联断桨与作动卡阻 FTA 仿真器">
+          <div class="sim-header">
+            <h4>
+              <span class="cn">交互式断桨非包容级联与倾转作动 FTA 概率仿真器</span>
+              <span class="en">Interactive Blade-Burst Cascade &amp; Tilt-Actuator FTA Simulator</span>
+            </h4>
+            <button type="button" class="sim-reset-btn" onclick="resetFtaSim()">
+              <span class="cn">重置基准参数</span><span class="en">Reset Defaults</span>
+            </button>
+          </div>
+          <div class="sim-grid">
+            <div class="sim-controls">
+              <div class="sim-control">
+                <label><span><span class="cn">单套推进单元失效率 λ<sub>EPU</sub></span><span class="en">Single EPU Failure Rate</span></span><span class="val" id="valFtaEpu">3×10⁻⁵ /fh</span></label>
+                <input type="range" id="ftaLambdaEpu" min="1" max="30" step="1" value="3">
+              </div>
+              <div class="sim-control">
+                <label><span><span class="cn">单具旋翼结构断裂飞脱率 λ<sub>burst</sub></span><span class="en">Blade Separation Rate λ<sub>burst</sub></span></span><span class="val" id="valFtaBurst">2.0×10⁻⁷ /fh</span></label>
+                <input type="range" id="ftaBurst" min="0.1" max="10.0" step="0.1" value="2.0">
+              </div>
+              <div class="sim-control">
+                <label><span><span class="cn">断桨碎片非撞击几何屏蔽率</span><span class="en">Blade-Strike Shielding / Geometry</span></span><span class="val" id="valFtaShield">90%</span></label>
+                <input type="range" id="ftaShield" min="50" max="99" step="1" value="90">
+                <small><span class="cn">翼上短舱交错布置与高强防弹道护罩对相邻站的隔离率</span><span class="en">Isolation from staggered nacelles &amp; ballistic shielding</span></small>
+              </div>
+              <div class="sim-control">
+                <label><span><span class="cn">单短舱倾转作动器卡阻率 λ<sub>act</sub></span><span class="en">Tilt-Actuator Jam Rate λ<sub>act</sub></span></span><span class="val" id="valFtaAct">1.5×10⁻⁶ /fh</span></label>
+                <input type="range" id="ftaAct" min="0.2" max="10.0" step="0.2" value="1.5">
+              </div>
+              <div class="sim-control">
+                <label><span><span class="cn">飞控/电源共因 β 因子</span><span class="en">System Common-Cause β Factor</span></span><span class="val" id="valFtaBeta">1.0%</span></label>
+                <input type="range" id="ftaBeta" min="0.1" max="5.0" step="0.1" value="1.0">
+              </div>
+            </div>
+            <div class="sim-results">
+              <div class="sim-metric">
+                <span class="lbl"><span class="cn">断桨级联净贡献 (CS2)</span><span class="en">Net Blade-Cascade Risk (CS2)</span></span>
+                <strong class="num" id="outFtaBurstNet">—</strong>
+              </div>
+              <div class="sim-metric">
+                <span class="lbl"><span class="cn">整机灾难概率 P<sub>cat</sub></span><span class="en">Total Top Event P<sub>cat</sub></span></span>
+                <strong class="num" id="outFtaTotal">—</strong>
+              </div>
+              <div class="sim-metric wide">
+                <span class="lbl"><span class="cn">当前主导最小割集</span><span class="en">Dominant Minimal Cut Set</span></span>
+                <strong class="num" style="font-size:14px;" id="outFtaDom">—</strong>
+              </div>
+              <div class="sim-metric wide" id="outFtaVerdictBox">
+                <span class="lbl"><span class="cn">商业载客适航裕度判断（对标 10⁻⁹/fh）</span><span class="en">Commercial Target Assessment (vs 10⁻⁹/fh)</span></span>
+                <strong class="num" style="font-size:13.5px;" id="outFtaVerdict">—</strong>
+              </div>
+            </div>
+          </div>
+          <div class="sim-chart-box">
+            <canvas id="ftaBarCanvas" aria-label="Joby S4 最小割集对数概率柱状图"></canvas>
+          </div>
+        </section>
+
+        <!-- Section 06 -->
+        <h2 id="sotif"><span class="cn">06 SOTIF、电池热隔离与信息安全（TARA）</span><span class="en">06 SOTIF, Thermal Containment &amp; Cybersecurity</span></h2>
+        <ul>
+          <li><span class="cn"><strong>SOTIF 统一操纵律边界：</strong>在 200 mph 高速巡航与垂直着陆之间，统一操纵杆的物理行程映射发生彻底切换；必须防备飞行员在城际大厦尾流湍流进近时对“杆量=垂直速率 vs 杆量=俯仰角”产生认知混淆。</span><span class="en"><strong>Unified Inceptor SOTIF:</strong> Transitioning from pitch-rate cruise to vertical velocity hover under rooftop turbulence demands clear HUD mode annunciations to avoid pilot mental-model confusion.</span></li>
+          <li><span class="cn"><strong>4 组电池热隔离与断桨耐撞性：</strong>按 <code>Part 21.17(b)</code> 商载标准，任何单组电池发生热失控，其火焰与高温气体必须在规定应急着陆时间窗内被封闭在独立舱室防火墙内，不得蔓延至客舱或机翼主承力碳纤维大梁。</span><span class="en"><strong>4-Pack Thermal Isolation:</strong> Per commercial powered-lift rules, any single-pack thermal runaway must remain contained behind cabin and wing-spar fire barriers through an emergency landing.</span></li>
+          <li><span class="cn"><strong>信息安全（DO-326A / ISO 21434）：</strong>作为连接城市空中交通网联调度的 Part 135 商业机型，须对航电数据总线与地面维护诊断端口实施严格物理隔离与加密验签，防止维护口注入篡改倾转同步参数。</span><span class="en"><strong>Avionics Cybersecurity:</strong> Apply DO-326A / ISO 21434 air-gapping and signed maintenance-port authentication to protect tilt-sync parameters and Triplex FCC firmware.</span></li>
+        </ul>
+
+        <!-- Section 07 -->
+        <h2 id="gsn"><span class="cn">07 GSN v3 安全论据与 FAA Stage 5 TIA 放行门控</span><span class="en">07 GSN v3 Safety Case &amp; FAA Stage 5 TIA Gate Audit</span></h2>
+
+        <!-- Custom Vector SVG #3: Joby GSN v3 -->
+        <figure class="fv-figure">
+          <svg viewBox="0 0 760 300" role="img" aria-label="Joby S4 GSN v3 安全论据图">
+            <rect width="760" height="300" fill="#fbfcfd"/>
+            <text x="18" y="22" fill="#182542" font-size="11.5" font-weight="700" font-family="sans-serif">Joby S4 GSN v3 安全论据：FAA Stage 5 TIA 进展 (●) vs Part 135 商载放行缺口 (◊)</text>
+            <line x1="18" y1="30" x2="742" y2="30" stroke="#d6dae3"/>
+
+            <rect x="215" y="40" width="330" height="44" fill="#182542"/>
+            <text x="380" y="59" fill="#ffffff" font-size="10.5" font-weight="700" text-anchor="middle" font-family="sans-serif">G1: Joby S4 倾转商业载客达到 10⁻⁹/fh 等效安全水平</text>
+            <text x="380" y="75" fill="#a8bef0" font-size="9" text-anchor="middle" font-family="sans-serif">FAA Stage 4 大部完成，N547JX 进入 Stage 5 TIA 试飞验证</text>
+
+            <line x1="380" y1="84" x2="380" y2="98" stroke="#283e6e" stroke-width="1.4"/>
+            <polygon points="240,98 540,98 520,130 220,130" fill="#eaedf5" stroke="#283e6e" stroke-width="1.3"/>
+            <text x="380" y="118" fill="#182542" font-size="9.8" font-weight="700" text-anchor="middle" font-family="sans-serif">S1: 分倾转控制、断桨包容性、4包热安全与 TIA 局方试飞四维论证</text>
+
+            <line x1="380" y1="130" x2="380" y2="144" stroke="#283e6e" stroke-width="1.3"/>
+            <line x1="100" y1="144" x2="660" y2="144" stroke="#283e6e" stroke-width="1.3"/>
+            <line x1="100" y1="144" x2="100" y2="158" stroke="#283e6e" stroke-width="1.3"/>
+            <line x1="286" y1="144" x2="286" y2="158" stroke="#283e6e" stroke-width="1.3"/>
+            <line x1="474" y1="144" x2="474" y2="158" stroke="#283e6e" stroke-width="1.3"/>
+            <line x1="660" y1="144" x2="660" y2="158" stroke="#283e6e" stroke-width="1.3"/>
+
+            <rect x="20" y="158" width="160" height="46" fill="#ffffff" stroke="#283e6e"/>
+            <text x="100" y="177" fill="#182542" font-size="9.5" font-weight="700" text-anchor="middle" font-family="sans-serif">G2: 审定基础与符合性</text>
+            <text x="100" y="193" fill="#5c6270" font-size="8.2" text-anchor="middle" font-family="sans-serif">Part 21.17(b) Stage 4</text>
+
+            <rect x="206" y="158" width="160" height="46" fill="#ffffff" stroke="#283e6e"/>
+            <text x="286" y="177" fill="#182542" font-size="9.5" font-weight="700" text-anchor="middle" font-family="sans-serif">G3: N542AJ 整改闭环</text>
+            <text x="286" y="193" fill="#5c6270" font-size="8.2" text-anchor="middle" font-family="sans-serif">连杆限位与断桨屏蔽</text>
+
+            <rect x="394" y="158" width="160" height="46" fill="#ffffff" stroke="#283e6e"/>
+            <text x="474" y="177" fill="#182542" font-size="9.5" font-weight="700" text-anchor="middle" font-family="sans-serif">G4: 局方 TIA 信用试飞</text>
+            <text x="474" y="193" fill="#5c6270" font-size="8.2" text-anchor="middle" font-family="sans-serif">FAA 试飞员驾驶 N547JX</text>
+
+            <rect x="580" y="158" width="160" height="46" fill="#ffffff" stroke="#283e6e"/>
+            <text x="660" y="177" fill="#182542" font-size="9.5" font-weight="700" text-anchor="middle" font-family="sans-serif">G5: Part 135 商业运营</text>
+            <text x="660" y="193" fill="#5c6270" font-size="8.2" text-anchor="middle" font-family="sans-serif">全天候/起降场与 PC 量产</text>
+
+            <line x1="100" y1="204" x2="100" y2="224" stroke="#283e6e"/>
+            <line x1="286" y1="204" x2="286" y2="224" stroke="#283e6e"/>
+            <line x1="474" y1="204" x2="474" y2="224" stroke="#283e6e"/>
+            <line x1="660" y1="204" x2="660" y2="224" stroke="#283e6e"/>
+
+            <circle cx="100" cy="252" r="27" fill="#eaf5ef" stroke="#165b3d" stroke-width="1.5"/>
+            <text x="100" y="249" fill="#165b3d" font-size="8.2" font-weight="700" text-anchor="middle" font-family="sans-serif">Sn1 闭环</text>
+            <text x="100" y="261" fill="#2d5b44" font-size="7.5" text-anchor="middle" font-family="sans-serif">Stage 4 测试</text>
+
+            <circle cx="286" cy="252" r="27" fill="#eaf5ef" stroke="#165b3d" stroke-width="1.5"/>
+            <text x="286" y="249" fill="#165b3d" font-size="8.2" font-weight="700" text-anchor="middle" font-family="sans-serif">Sn2 闭环</text>
+            <text x="286" y="261" fill="#2d5b44" font-size="7.5" text-anchor="middle" font-family="sans-serif">N547JX 构型</text>
+
+            <polygon points="474,224 528,252 474,280 420,252" fill="#fdf5e7" stroke="#9a5b13" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <text x="474" y="249" fill="#9a5b13" font-size="8.2" font-weight="700" text-anchor="middle" font-family="sans-serif">◊ 缺口 Sn3</text>
+            <text x="474" y="261" fill="#5e4b2b" font-size="7.5" text-anchor="middle" font-family="sans-serif">TIA 全项目签发</text>
+
+            <polygon points="660,224 714,252 660,280 606,252" fill="#fdf5e7" stroke="#9a5b13" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <text x="660" y="249" fill="#9a5b13" font-size="8.2" font-weight="700" text-anchor="middle" font-family="sans-serif">◊ 缺口 Sn4</text>
+            <text x="660" y="261" fill="#5e4b2b" font-size="7.5" text-anchor="middle" font-family="sans-serif">最终 TC + PC + 135</text>
+          </svg>
+          <figcaption>
+            <span class="cn">图 3：Joby S4 GSN v3 安全论据结构。前期构型验证与符合性原型机（N547JX）已支撑进入 TIA，但商业载客仍需等待局方信用试飞与最终 TC/PC 批准。</span>
+            <span class="en">Figure 3: Joby S4 GSN v3 Safety Case illustrating Stage 4/N547JX evidence versus open TIA for-credit flight sign-off and final TC/PC gates.</span>
+          </figcaption>
+        </figure>
+
+        <section class="sim-card" id="safetyGateAudit" aria-label="FAA Stage 5 TIA 与商业放行门控核查">
+          <div class="sim-header">
+            <h4>
+              <span class="cn">交互式 FAA Stage 5 TIA 与商业 Air Taxi 放行门控核查（8 项）</span>
+              <span class="en">Interactive FAA Stage 5 TIA &amp; Commercial Release Checklist (8 Gates)</span>
+            </h4>
+          </div>
+          <div class="gate-checklist">
+            <label class="gate-item"><input type="checkbox" class="gate-check" checked><span><strong>Gate 1 [已闭环]:</strong> <span class="cn">FAA Part 21.17(b) 专用审定基础（G-1）与符合性计划（Stage 1–3）锁定</span><span class="en">FAA Part 21.17(b) cert basis (G-1) &amp; Stage 1–3 plans locked</span></span></label>
+            <label class="gate-item"><input type="checkbox" class="gate-check" checked><span><strong>Gate 2 [已闭环]:</strong> <span class="cn">NTSB DCA22FA082 整改：作动连杆防超程硬限位与桨叶根部强化完成</span><span class="en">NTSB DCA22FA082 fixes: actuator hard-stop &amp; blade-root reinforcement</span></span></label>
+            <label class="gate-item"><input type="checkbox" class="gate-check" checked><span><strong>Gate 3 [已闭环]:</strong> <span class="cn">FAA 符合性原型机 N547JX 在受控质量体系下下线并开启试飞</span><span class="en">FAA-conforming N547JX rolled out under QMS &amp; started flight testing</span></span></label>
+            <label class="gate-item"><input type="checkbox" class="gate-check"><span><strong>Gate 4 [审定中]:</strong> <span class="cn">FAA 试飞员完成全部“for-credit”TIA 信用试飞科目（含 OEI 与失速走廊）</span><span class="en">FAA pilots complete all for-credit TIA flight test cards</span></span></label>
+            <label class="gate-item"><input type="checkbox" class="gate-check"><span><strong>Gate 5 [待闭环]:</strong> <span class="cn">通过断桨非包容性碎片击打与 4 电池热蔓延耐火最终局方目击试验</span><span class="en">Witnessed rotor-burst containment &amp; 4-pack thermal fire isolation tests</span></span></label>
+            <label class="gate-item"><input type="checkbox" class="gate-check"><span><strong>Gate 6 [待闭环]:</strong> <span class="cn">正式获颁 FAA Powered-Lift 型号合格证 (TC)</span><span class="en">Formal FAA Powered-Lift Type Certificate (TC) issuance</span></span></label>
+            <label class="gate-item"><input type="checkbox" class="gate-check"><span><strong>Gate 7 [待闭环]:</strong> <span class="cn">获颁 FAA 生产许可证 (PC) 并验证批产短舱/复合材料一致性</span><span class="en">FAA Production Certificate (PC) for composite &amp; nacelle serial build</span></span></label>
+            <label class="gate-item"><input type="checkbox" class="gate-check"><span><strong>Gate 8 [待闭环]:</strong> <span class="cn">完成 Part 135 航司运行规范、飞行员 Powered-Lift 签注与起降场准入</span><span class="en">Part 135 air-carrier ops specs, pilot ratings, and vertiport approvals</span></span></label>
+          </div>
+          <div class="sim-results">
+            <div class="sim-metric"><span class="lbl"><span class="cn">商业放行完备度</span><span class="en">Readiness Score</span></span><strong class="num" id="auditScore">38%</strong></div>
+            <div class="sim-metric"><span class="lbl"><span class="cn">已闭合门控</span><span class="en">Closed Gates</span></span><strong class="num" id="auditCount">3 / 8</strong></div>
+          </div>
+          <div class="gate-progress-wrap"><div class="gate-progress-fill" id="auditBarFill"></div></div>
+          <div class="sim-metric wide" id="auditVerdictBox">
+            <span class="lbl"><span class="cn">当前适航放行状态</span><span class="en">Current Certification Verdict</span></span>
+            <strong class="num" style="font-size:13.5px;" id="auditVerdict">—</strong>
+          </div>
+        </section>
+
+        <!-- Section 08 -->
+        <h2 id="recommendations"><span class="cn">08 分级安全工程建议</span><span class="en">08 Prioritized Safety Recommendations</span></h2>
+        <div class="prio-grid">
+          <div class="prio-card p0">
+            <h4><span class="cn">P0 · 倾转与断桨硬防护</span><span class="en">P0 · Tilt &amp; Burst Guards</span></h4>
+            <ul>
+              <li><span class="cn">作动连杆机械防超程硬限位 + 左右短舱偏差 &gt;2° 毫秒级冻结锁定。</span><span class="en">Enforce linkage hard-stops &amp; freeze symmetric tilt at &gt;2° delta.</span></li>
+              <li><span class="cn">对相邻推进站与翼梁关键线束实施非包容断桨扇面物理屏蔽。</span><span class="en">Shield critical wing-spar harnesses inside rotor-burst impact fans.</span></li>
+            </ul>
+          </div>
+          <div class="prio-card p1">
+            <h4><span class="cn">P1 · 过渡走廊与热安全</span><span class="en">P1 · Corridor &amp; Thermal</span></h4>
+            <ul>
+              <li><span class="cn">统一操纵杆配置双余度攻角/空速保护律，防止低速过早前倾。</span><span class="en">Protect unified control law against premature forward tilt below stall.</span></li>
+              <li><span class="cn">确保 4 组电池包各自独立防火隔离并能在单包失效下完成改降。</span><span class="en">Contain single-pack runaway behind firewalls through emergency landing.</span></li>
+            </ul>
+          </div>
+          <div class="prio-card p2">
+            <h4><span class="cn">P2 · 商业运营与人员培训</span><span class="en">P2 · Part 135 Ops &amp; Training</span></h4>
+            <ul>
+              <li><span class="cn">在飞行模拟器重点强化高楼阵风切变下的单发 OEI 过渡配平训练。</span><span class="en">Train pilots in full-motion simulators on OEI transition in urban gusts.</span></li>
+              <li><span class="cn">持续跟踪高频短途商业起降对倾转关节轴承与复合材料疲劳影响。</span><span class="en">Track high-cycle tilt-bearing &amp; composite fatigue via fleet telemetry.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- References -->
+        <h2 id="references"><span class="cn">参考文献 (GB/T 7714—2015)</span><span class="en">References (GB/T 7714—2015)</span></h2>
+        <ol class="fv-reference-list">
+          <li id="ref1">Joby Aviation. Joby S4 Powered-Lift FAA Type Certification Stage 4/5 &amp; Conforming Aircraft N547JX Updates[EB/OL]. 2025–2026 [2026-11-23]. <a href="https://www.jobyaviation.com/" target="_blank" rel="noopener">https://www.jobyaviation.com/</a>.</li>
+          <li id="ref2">Federal Aviation Administration (FAA). Airworthiness Criteria: Special Class Airworthiness Criteria for the Joby Aero, Inc. Model JAS4-1 Powered-Lift (14 CFR § 21.17(b))[S/OL]. Washington, DC: FAA, 2024 [2026-11-23]. <a href="https://www.faa.gov/" target="_blank" rel="noopener">https://www.faa.gov/</a>.</li>
+          <li id="ref3">National Transportation Safety Board (NTSB). Aviation Investigation Final Report: Joby Aviation JAS4-2 (N542AJ), Jolon, California, February 16, 2022 (Accident ID: DCA22FA082)[R/OL]. Washington, DC: NTSB, 2024 [2026-11-23]. <a href="https://www.ntsb.gov/" target="_blank" rel="noopener">https://www.ntsb.gov/</a>.</li>
+          <li id="ref4">AIAA / eVTOL Insights / AIN Online. Analysis of Joby N542AJ 181 KIAS Envelope Expansion Blade Failure &amp; Actuator Linkage Findings[EB/OL]. 2024–2025 [2026-11-23]. <a href="https://evtol.news/" target="_blank" rel="noopener">https://evtol.news/</a>.</li>
+          <li id="ref5">SAE International. Guidelines and Methods for Conducting the Safety Assessment Process on Civil Aircraft, Systems, and Equipment: ARP4761A[S]. Warrendale: SAE, 2023.</li>
+          <li id="ref6">LEVESON N G, THOMAS J P. STPA Handbook[M]. Cambridge, MA: MIT, 2018.</li>
+          <li id="ref7">European Union Aviation Safety Agency (EASA). Special Condition for small-category VTOL aircraft: SC-VTOL-01[S/OL]. 2019 [2026-11-23]. <a href="https://www.easa.europa.eu/" target="_blank" rel="noopener">https://www.easa.europa.eu/</a>.</li>
+          <li id="ref8">DARMSTADT P R, PATHAK S, KRANTZ T, et al. Design Concepts to Meet EASA SC-VTOL-01 Single Failure Criteria[C]//VFS 78th Annual Forum. 2022. DOI: <a href="https://doi.org/10.4050/F-0078-2022-17608" target="_blank" rel="noopener">10.4050/F-0078-2022-17608</a>.</li>
+          <li id="ref9">Assurance Case Working Group (ACWG). Goal Structuring Notation (GSN) Community Standard Version 3[S/OL]. SCSC, 2021-05 [2026-11-23]. <a href="https://scsc.uk/" target="_blank" rel="noopener">https://scsc.uk/</a>.</li>
+          <li id="ref10">张玉新. 飞行汽车技术基础 (Fundamentals of Flying Vehicle Technology)[EB/OL]. 吉林大学自动驾驶安全联合实验室, 2026 [2026-11-23]. <a href="https://lab.autozyx.com/fundamentals-of-flying-vehicle-technology/" target="_blank" rel="noopener">https://lab.autozyx.com/fundamentals-of-flying-vehicle-technology/</a>.</li>
+        </ol>
+      </article>
+
+      <aside class="fv-evidence-rail" aria-label="安全分析图例">
+        <p class="fv-rail-title"><span class="cn">安全严酷度图例</span><span class="en">Severity Legend</span></p>
+        <ul>
+          <li><span class="fv-badge fv-badge-critical">DAL A / Catastrophic</span><br><span class="cn">断桨级联、作动卡阻或过渡失速，目标 ≤ 10⁻⁹/fh。</span><span class="en">Blade cascade, tilt jam, or stall; ≤ 10⁻⁹/fh target.</span></li>
+          <li><span class="fv-badge fv-badge-high">DAL B / Hazardous</span><br><span class="cn">单包热隔离降级或双传感器偏差。</span><span class="en">Pack isolation derating or sensor divergence.</span></li>
+          <li><span class="fv-badge fv-badge-med">Major</span><br><span class="cn">可控降级与提前备降处置。</span><span class="en">Controlled degradation requiring diversion.</span></li>
+        </ul>
+        <div class="fv-rail-card">
+          <strong><span class="cn">Joby S4 作业核查</span><span class="en">Joby S4 Checklist</span></strong>
+          <span class="cn">✓ 根目录 <code>index.html</code><br>✓ NTSB DCA22FA082 CAST + 倾转走廊安全<br>✓ 3 个交互安全工具 + 中英切换</span>
+          <span class="en">✓ Root <code>index.html</code><br>✓ NTSB CAST + tilt-transition safety<br>✓ 3 interactive tools + CN/EN toggle</span>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="fv-footer">
+    <div class="container">
+      <p><span class="cn"><strong>《飞行汽车技术基础（2026）》课程作业-2：全方位系统安全分析</strong> · 对象：Joby Aviation S4</span><span class="en"><strong>Fundamentals of Flying Vehicle Technology (2026) · Assignment 2</strong> · Subject: Joby Aviation S4</span></p>
+    </div>
+  </footer>
+  <script src="assets/app.js"></script>
+</body>
+</html>
